@@ -1,16 +1,24 @@
 <!DOCTYPE html>
 <html ng-app>
 	<head>
+		<meta http-equiv="content-type" content="text/html; charset=UTF-8">
 		<title>Editator</title>
 		<script src="@routes.Assets.at("javascripts/angular.min.js")"></script>
 		<script src="@routes.Assets.at("javascripts/editator.js")"></script>
 		<link rel="stylesheet" media="screen" href="@routes.Assets.at("stylesheets/main.css")">
 		<link rel="shortcut icon" type="image/ico" href="@routes.Assets.at("images/favicon.ico")">
 	</head>
-	<body>
+	<body ng-controller="Editator">
+		<div> 
+			<form ng-submit="updateNick()">
+				<span>Nick:</span>
+				<input type="text" ng-model="user.nick" size="24">
+				<input type="submit" value="Notify room">
+			</form>
+		</div>
 		<div>
 			<span>Current users:</span>
-			<ul ng-controller="Editator">
+			<ul>
 				<li ng-repeat="user in room.users">{{user.name}}</li>
 			</ul>
 		</div>
