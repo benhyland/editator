@@ -8,4 +8,5 @@ GET		/begin				controllers.Application.editatorBegin
 POST	/join				controllers.Application.editatorJoin
 
 # Map static resources from the /public folder to the /assets URL path
+GET		/favicon.ico		controllers.Assets.at(path="/public", file="images/favicon.ico")
 GET		/assets/*file		controllers.Assets.at(path="/public", file)

@@ -7,7 +7,7 @@
 		<script src="@routes.Assets.at("javascripts/angular.min.js")"></script>
 		<script src="@routes.Assets.at("javascripts/editator.js")"></script>
 		<link rel="stylesheet" media="screen" href="@routes.Assets.at("stylesheets/main.css")">
-		<link rel="shortcut icon" type="image/ico" href="@routes.Assets.at("images/favicon.ico")">
+		<link rel="icon" href="@routes.Assets.at("favicon.ico")">
 	</head>
 	<body ng-app="editator" ng-controller="Editator" ed-events-service="@routes.Application.editatorEvents().webSocketURL()">
 			<form ng-submit="updateNick()">
