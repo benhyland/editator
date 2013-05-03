@@ -1,4 +1,15 @@
-function Editator($scope) {
+'use strict';
+
+var editator = angular.module('editator', [])
+
+editator.directive('edEventsService', function() {
+	return function(scope, element, attrs) {
+		scope.connect(attrs.edEventsService)
+	}
+})
+	
+function Editator($scope, $http) {
+
 	$scope.room = {
 		'users': [ {'name': 'fred'}, {'name': 'bob'} ]
 	}
@@ -8,7 +19,17 @@ function Editator($scope) {
 	}
 
 	$scope.updateNick = function() {
-		// todo: send to server and subscribe to room change events - atmosphere?
-		this.room.users.push({'name': this.user.nick})
+		$http.post('/join', angular.toJson(this.user)).success(function(result){ alert(result); })
+	}
+
+
+	$scope.connect = function(serviceLocation) {
+		alert(serviceLocation);
+		var ws = new WebSocket(serviceLocation)
+
+		ws.onmessage = function(evt) {
+			var json = angular.fromJson(evt.data)
+			$scope.$apply(function(){ $scope.room.users = json.users })
+		}
 	}
 }
