@@ -1,11 +1,14 @@
-# Websockets for intra-room events
+# Websocket for intra-room events
 GET		/editator			controllers.Application.editatorEvents
 
 # Start page to load angular and app
 GET		/begin				controllers.Application.editatorBegin
 
-# Join room
-POST	/join				controllers.Application.editatorJoin
+# Join or leave room, returning full status
+POST	/joinToggle			controllers.Application.editatorToggleJoin
+
+# change nickname (if currently in room)
+POST	/nick				controllers.Application.editatorChangeNick
 
 # Map static resources from the /public folder to the /assets URL path
 GET		/favicon.ico		controllers.Assets.at(path="/public", file="images/favicon.ico")

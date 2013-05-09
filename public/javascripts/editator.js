@@ -7,29 +7,60 @@ editator.directive('edEventsService', function() {
 		scope.connect(attrs.edEventsService)
 	}
 })
-	
+
+function User() {
+	this.nick = ''
+	this.id = ''
+}
+
 function Editator($scope, $http) {
 
 	$scope.room = {
-		'users': [ {'name': 'fred'}, {'name': 'bob'} ]
+		'users': [],
+		'setJoined': function(isJoined) {
+			this.isJoined = isJoined
+			this.joinLabel = this.isJoined ? 'Leave room' : 'Join room'
+		}
 	}
+	$scope.room.setJoined(false)
 	
-	$scope.user = {
-		'nick': ''
-	}
+	$scope.user = new User()
 
 	$scope.updateNick = function() {
-		$http.post('/join', angular.toJson(this.user)).success(function(result){ alert(result); })
+		if(this.room.isJoined) {
+			$http.post('/nick', angular.toJson(this.user))
+		}
 	}
 
+	$scope.toggleJoinRoom = function() {
+		$http.post('/joinToggle', angular.toJson(this.user)).success( function(data) {
+			var json = angular.fromJson(data)
+			console.log(json)
+			$scope.room.setJoined(json.isJoined)
+			$scope.user = json.user
+		})
+	}
+
+	$scope.handlers = {
+		'roomUpdate': function(msg) {
+			$scope.room = msg.room
+		},
+
+		'userUpdate': function(msg) {
+			$scope.user = msg.user
+		}
+	}
 
 	$scope.connect = function(serviceLocation) {
-		alert(serviceLocation);
 		var ws = new WebSocket(serviceLocation)
 
-		ws.onmessage = function(evt) {
-			var json = angular.fromJson(evt.data)
-			$scope.$apply(function(){ $scope.room.users = json.users })
-		}
+		ws.addEventListener('message', function(evt) {
+			var msg = angular.fromJson(evt.data)
+			console.log(msg)
+			var handler = $scope.handlers[msg.type]
+			if(handler) {
+				$scope.$apply(function(){ handler(msg) })
+			}
+		})
 	}
 }

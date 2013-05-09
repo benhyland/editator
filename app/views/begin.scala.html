@@ -10,16 +10,18 @@
 		<link rel="icon" href="@routes.Assets.at("favicon.ico")">
 	</head>
 	<body ng-app="editator" ng-controller="Editator" ed-events-service="@routes.Application.editatorEvents().webSocketURL()">
+		<div>
+			<a href="" ng-click="toggleJoinRoom()">{{room.joinLabel}}</a>
 			<form ng-submit="updateNick()">
 				<span>Nick:</span>
 				<input type="text" ng-model="user.nick" size="24">
-				<input type="submit" value="Notify room">
+				<input type="submit" value="Update nickname">
 			</form>
 		</div>
 		<div>
 			<span>Current users:</span>
 			<ul>
-				<li ng-repeat="user in room.users">{{user.name}}</li>
+				<li ng-repeat="user in room.users">{{user.nick}}</li>
 			</ul>
 		</div>
 	</body>
