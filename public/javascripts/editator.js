@@ -10,7 +10,7 @@ editator.directive('edEventsService', function() {
 
 function User() {
 	this.nick = ''
-	this.id = ''
+	this.id;
 }
 
 function Editator($scope, $http) {
@@ -35,20 +35,15 @@ function Editator($scope, $http) {
 	$scope.toggleJoinRoom = function() {
 		$http.post('/joinToggle', angular.toJson(this.user)).success( function(data) {
 			var json = angular.fromJson(data)
-			console.log(json)
 			$scope.room.setJoined(json.isJoined)
 			$scope.user = json.user
 		})
 	}
 
 	$scope.handlers = {
-		'roomUpdate': function(msg) {
-			$scope.room = msg.room
+		'memberUpdate': function(msg) {
+			$scope.room.users = msg.members
 		},
-
-		'userUpdate': function(msg) {
-			$scope.user = msg.user
-		}
 	}
 
 	$scope.connect = function(serviceLocation) {
@@ -56,7 +51,6 @@ function Editator($scope, $http) {
 
 		ws.addEventListener('message', function(evt) {
 			var msg = angular.fromJson(evt.data)
-			console.log(msg)
 			var handler = $scope.handlers[msg.type]
 			if(handler) {
 				$scope.$apply(function(){ handler(msg) })
