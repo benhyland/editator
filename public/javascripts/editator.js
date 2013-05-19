@@ -8,12 +8,19 @@ editator.directive('edEventsService', function() {
 	}
 })
 
+function Content() {
+	this.text = ''
+}
+
+
 function User() {
 	this.nick = ''
 	this.id;
 }
 
 function Editator($scope, $http) {
+
+	$scope.content = new Content()
 
 	$scope.room = {
 		'users': [],
