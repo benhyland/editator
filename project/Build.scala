@@ -8,6 +8,7 @@ object ApplicationBuild extends Build {
   val appVersion      = "1.0-SNAPSHOT"
 
   val appDependencies = Seq(
+      "joda-time" % "joda-time" % "2.2"
   )
 
 
