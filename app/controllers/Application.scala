@@ -10,9 +10,7 @@ import uk.co.bhyland.editator.model.User
 
 object Application extends Controller {
   
-  def logThread(msg: String) = println(Thread.currentThread().getName() + " : " + msg)
-  
-  val room = new Processor
+  val processor = new Processor
   
   def editatorBegin = Action { request =>
     Ok(views.html.begin(request))
@@ -27,7 +25,7 @@ object Application extends Controller {
     
   def editatorToggleJoin = Action(parse.json) { request =>
     val user = userFromJson(request.body)
-    val output: Future[Result] = room.toggleJoin(user)
+    val output: Future[Result] = processor.toggleJoin(user)
     Async {
       output
     }
@@ -35,13 +33,14 @@ object Application extends Controller {
 
   def editatorChangeNick = Action(parse.json) { request =>
     val user = userFromJson(request.body)
-    room.changeNick(user)
+    processor.changeNick(user)
     Ok("")
   }
   
   def editatorEvents = WebSocket.using[JsValue] { request =>
     val in = Iteratee.ignore[JsValue]
-    val out = room.broadcast
+    // TODO: get appropriate event stream for instance
+    val out = processor.broadcast
     (in, out)
   }
 }
