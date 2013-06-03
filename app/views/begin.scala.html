@@ -11,6 +11,11 @@
 	</head>
 	<body ng-app="editator" ng-controller="Editator" ed-events-service="@routes.Application.editatorEvents().webSocketURL()">
 		<div>
+			<span>Existing rooms:</span>
+			<select ng-model="key">
+				<option ng-repeat="roomkey in existingRooms">{{roomkey}}</option>
+			</select>
+			<span>Room: <input type="text" ng-model="key" size="16"></input></span>
 			<a href="" ng-click="toggleJoinRoom()">{{room.joinLabel}}</a>
 			<form ng-submit="updateNick()">
 				<span>Nick:</span>

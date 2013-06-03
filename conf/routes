@@ -4,6 +4,9 @@ GET		/editator			controllers.Application.editatorEvents
 # Start page to load angular and app
 GET		/begin				controllers.Application.editatorBegin
 
+# example for get via angular - find preexisting rooms 
+GET		/rooms				controllers.Application.editatorRooms
+
 # Join or leave room, returning full status
 POST	/joinToggle			controllers.Application.editatorToggleJoin
 

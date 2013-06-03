@@ -6,6 +6,7 @@ import uk.co.bhyland.editator.model.Room
 /** marks input for editator handled by the iteratee state machine */
 sealed trait EditatorInput
 
+case class ListRooms(callback: List[String] => Unit) extends EditatorInput
 case class UpdateNick(user: User) extends EditatorInput
 case class ToggleJoinRoom(user: User, callback: Room[_] => Unit) extends EditatorInput
 case class Talk(user: User, message: String) extends EditatorInput

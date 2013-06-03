@@ -16,6 +16,8 @@ import uk.co.bhyland.editator.model.User
 import uk.co.bhyland.editator.model.EditatorText
 import uk.co.bhyland.editator.model.EditatorRoom
 import uk.co.bhyland.editator.model.EditatorInstance
+import uk.co.bhyland.editator.messages.ListRooms
+import uk.co.bhyland.editator.messages.RoomListUpdate
 
 case class EditatorState(instance: EditatorInstance)
 
@@ -33,6 +35,10 @@ class Processor {
 
   private val processor = Iteratee.fold[EditatorInput, EditatorState](EditatorState()) { (state, evt) =>
     val nextInstance = evt match {
+      case ListRooms(callback) => {
+        callback(List(state.instance.toString))
+        state.instance
+      } 
       case UpdateNick(user) => state.instance.changeNick(user)
       case ToggleJoinRoom(user, callback) => {
         val s = state.instance.toggleJoin(user)
@@ -51,6 +57,13 @@ class Processor {
   def toggleJoin(user: User) = {
     val p = Promise.apply[Result]()
     val evt = ToggleJoinRoom(user, { room => p.success(Ok(ToggleJoinResponse(room.isMember(user.id), user).asJson)) })
+    inChannel.push(evt)
+    p.future
+  }
+  
+  def currentRooms = {
+    val p = Promise.apply[Result]()
+    val evt = ListRooms({ rooms => p.success(Ok(RoomListUpdate(rooms).asJson)) })
     inChannel.push(evt)
     p.future
   }

@@ -20,6 +20,15 @@ function User() {
 
 function Editator($scope, $http) {
 
+	$scope.key;
+	
+	$scope.existingRooms = []
+	$http.get('/rooms').success(
+		function(data) {
+			var json = angular.fromJson(data)
+			$scope.existingRooms = json.rooms
+		})
+
 	$scope.content = new Content()
 
 	$scope.room = {

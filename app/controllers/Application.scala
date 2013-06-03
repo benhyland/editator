@@ -16,6 +16,13 @@ object Application extends Controller {
     Ok(views.html.begin(request))
   }
 
+  def editatorRooms = Action { request =>
+    val output = processor.currentRooms
+    Async {
+      output
+    }
+  }
+  
   def userFromJson(user: JsValue) = {
     val nick = (user \ "nick").asOpt[String]
     val id = (user \ "id").asOpt[String]
