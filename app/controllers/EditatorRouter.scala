@@ -19,13 +19,13 @@ import uk.co.bhyland.editator.model.EditatorInstance
 import uk.co.bhyland.editator.messages.ListRooms
 import uk.co.bhyland.editator.messages.RoomListUpdate
 
-case class EditatorState(instance: EditatorInstance)
+case class EditatorState(instances: Map[String,EditatorInstance])
 
 object EditatorState {
-  def apply(): EditatorState = EditatorState(EditatorInstance())
+  def apply(): EditatorState = EditatorState(Map())
 }
 
-class Processor {
+class EditatorRouter {
 
   private val (inputEnumerator, inChannel) = Concurrent.broadcast[EditatorInput]
 
@@ -33,38 +33,32 @@ class Processor {
 
   val broadcast: Enumerator[JsValue] = outputEnumerator
 
-  private val processor = Iteratee.fold[EditatorInput, EditatorState](EditatorState()) { (state, evt) =>
-    val nextInstance = evt match {
-      case ListRooms(callback) => {
-        callback(List(state.instance.toString))
-        state.instance
-      } 
-      case UpdateNick(user) => state.instance.changeNick(user)
-      case ToggleJoinRoom(user, callback) => {
-        val s = state.instance.toggleJoin(user)
-        callback(s)
-        s
-      }
+  private val processor = Iteratee.fold[EditatorInput, EditatorState](EditatorState()) { (state, input) =>
+    
+    val (nextState, outputMessages) = MessageProcessor.handleInputMessage(state, input)
+    
+    outputMessages.foreach { message =>
+      outChannel.push(message.asJson)
     }
-    outChannel.push(RoomMembershipUpdate(nextInstance.members.map(_.name)).asJson)
-    EditatorState(nextInstance)
+    
+    nextState
   }
 
   inputEnumerator |>> processor
 
-  def changeNick(user: User) = inChannel.push(UpdateNick(user))
+  def changeNick(key: String, user: User) = inChannel.push(UpdateNick(key, user))
 
-  def toggleJoin(user: User) = {
-    val p = Promise.apply[Result]()
-    val evt = ToggleJoinRoom(user, { room => p.success(Ok(ToggleJoinResponse(room.isMember(user.id), user).asJson)) })
-    inChannel.push(evt)
-    p.future
+  def toggleJoin(key: Option[String], user: User) = futureResult { p =>
+    ToggleJoinRoom(key, user, { room => p.success(Ok(ToggleJoinResponse(room.key, room.isMember(user.id), user).asJson)) })
   }
   
-  def currentRooms = {
+  def currentRooms = futureResult { p =>
+    ListRooms({ rooms => p.success(Ok(RoomListUpdate(rooms).asJson)) })
+  }
+  
+  def futureResult(input: Promise[Result] => EditatorInput) = {
     val p = Promise.apply[Result]()
-    val evt = ListRooms({ rooms => p.success(Ok(RoomListUpdate(rooms).asJson)) })
-    inChannel.push(evt)
+    inChannel.push(input(p))
     p.future
   }
 }

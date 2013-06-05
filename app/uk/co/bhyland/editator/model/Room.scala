@@ -16,6 +16,7 @@ object User {
 trait Room[SELF <: Room[SELF]] {
   def self: SELF
   
+  def key: String
   def join(user: User): SELF
   def leave(id: String): SELF
   def isMember(id: String): Boolean

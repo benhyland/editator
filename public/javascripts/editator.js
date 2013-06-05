@@ -18,41 +18,48 @@ function User() {
 	this.id;
 }
 
+function Room() {
+	this.key;
+	this.users = []
+	this.setJoined = function(isJoined) {
+		this.isJoined = isJoined
+		this.joinLabel = this.isJoined ? 'Leave room' : 'Join room'
+	}
+}
+
 function Editator($scope, $http) {
-
-	$scope.key;
 	
-	$scope.existingRooms = []
-	$http.get('/rooms').success(
-		function(data) {
-			var json = angular.fromJson(data)
-			$scope.existingRooms = json.rooms
-		})
-
+	$scope.jsonWithKey = function(messageObj) {
+		var message = angular.copy(messageObj)
+		message.key = $scope.room.key
+		return angular.toJson(message)
+	}
+	
 	$scope.content = new Content()
 
-	$scope.room = {
-		'users': [],
-		'setJoined': function(isJoined) {
-			this.isJoined = isJoined
-			this.joinLabel = this.isJoined ? 'Leave room' : 'Join room'
-		}
-	}
+	$scope.room = new Room()
 	$scope.room.setJoined(false)
 	
 	$scope.user = new User()
-
+	
+	$scope.existingRooms = []
+	$http.get('/rooms').success( function(data) {
+		var json = angular.fromJson(data)
+		$scope.existingRooms = json.rooms
+	})
+		
 	$scope.updateNick = function() {
 		if(this.room.isJoined) {
-			$http.post('/nick', angular.toJson(this.user))
+			$http.post('/nick', $scope.jsonWithKey(this.user))
 		}
 	}
 
 	$scope.toggleJoinRoom = function() {
-		$http.post('/joinToggle', angular.toJson(this.user)).success( function(data) {
-			var json = angular.fromJson(data)
-			$scope.room.setJoined(json.isJoined)
-			$scope.user = json.user
+		$http.post('/joinToggle', $scope.jsonWithKey(this.user)).success( function(data) {
+			$scope.room.setJoined(data.isJoined)
+			$scope.existingRooms.push(data.roomKey)
+			$scope.room.key = data.roomKey
+			$scope.user = data.user
 		})
 	}
 
@@ -66,6 +73,7 @@ function Editator($scope, $http) {
 		var ws = new WebSocket(serviceLocation)
 
 		ws.addEventListener('message', function(evt) {
+			alert(evt.data)
 			var msg = angular.fromJson(evt.data)
 			var handler = $scope.handlers[msg.type]
 			if(handler) {

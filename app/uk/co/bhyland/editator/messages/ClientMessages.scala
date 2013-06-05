@@ -47,8 +47,9 @@ case class RoomListUpdate(rooms: List[String]) extends AsJson {
   ))
 }
 
-case class ToggleJoinResponse(isJoined: Boolean, user: User) extends AsJson {
+case class ToggleJoinResponse(roomKey: String, isJoined: Boolean, user: User) extends AsJson {
   override def asJson = toJson(Map(
+    "roomKey" -> toJson(roomKey),
     "isJoined" -> toJson(isJoined),
     "user" -> toJson(Map(
       "id" -> toJson(user.id),
