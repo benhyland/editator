@@ -27,11 +27,22 @@ function Room() {
 	}
 }
 
+function RoomSet() {
+	this.selectedRoom = ''
+	this.roomSet = {}
+	this.rooms = function() {
+		return Object.keys(this.roomSet)
+	}
+	this.addRoom = function(room) {
+		this.roomSet[room] = true
+	}
+}
+
 function Editator($scope, $http) {
 	
 	$scope.jsonWithKey = function(messageObj) {
 		var message = angular.copy(messageObj)
-		message.key = $scope.room.key
+		message.key = $scope.room.isJoined ? $scope.room.key : $scope.roomSet.selectedRoom
 		return angular.toJson(message)
 	}
 	
@@ -42,10 +53,12 @@ function Editator($scope, $http) {
 	
 	$scope.user = new User()
 	
-	$scope.existingRooms = []
+	$scope.roomSet = new RoomSet()
 	$http.get('/rooms').success( function(data) {
 		var json = angular.fromJson(data)
-		$scope.existingRooms = json.rooms
+		angular.forEach(json.rooms, function(room) {
+			$scope.roomSet.addRoom(room)
+		})
 	})
 		
 	$scope.updateNick = function() {
@@ -57,7 +70,7 @@ function Editator($scope, $http) {
 	$scope.toggleJoinRoom = function() {
 		$http.post('/joinToggle', $scope.jsonWithKey(this.user)).success( function(data) {
 			$scope.room.setJoined(data.isJoined)
-			$scope.existingRooms.push(data.roomKey)
+			$scope.roomSet.addRoom(data.roomKey)
 			$scope.room.key = data.roomKey
 			$scope.user = data.user
 		})
