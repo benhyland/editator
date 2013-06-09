@@ -3,7 +3,7 @@ Editator
 
 Editator provides a shared document with an attached chatroom for collaborative editing in a webapp.
 
-It is a toy project intended to help learn new technologies, so far including
+It is a toy project intended to help learn new hotness, including
 - [git](http://git-scm.com/)
 - [github](https://github.com/)
 - [scala](http://www.scala-lang.org/)
@@ -13,4 +13,5 @@ It is a toy project intended to help learn new technologies, so far including
 - [angularJS](http://angularjs.org/)
 - Neil Fraser's [differential synchronisation](http://neil.fraser.name/writing/sync/)
 - pure function json from [argonaut](http://argonaut.io/)
-- [bootstrap](http://twitter.github.io/bootstrap/) and other quick design tips from [darkgreener's article](http://24ways.org/2012/how-to-make-your-site-look-half-decent/)
+- [html5](http://diveintohtml5.info/) structural elements
+- [bootstrap](http://twitter.github.io/bootstrap/) and other tips along the lines of [darkgreener's article](http://24ways.org/2012/how-to-make-your-site-look-half-decent/)
