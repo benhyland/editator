@@ -3,10 +3,11 @@ package controllers
 import play.api.mvc._
 import play.api.libs.iteratee.Iteratee
 import play.api.libs.json.JsValue
-
 import scala.concurrent.Future
-
 import uk.co.bhyland.editator.model.User
+import uk.co.bhyland.editator.messages.JsonCodec._
+import argonaut._
+import Argonaut._
 
 object Application extends Controller {
   
@@ -22,29 +23,20 @@ object Application extends Controller {
       output
     }
   }
-  
-  def userFromJson(user: JsValue) = {
-    val nick = (user \ "nick").asOpt[String]
-    val id = (user \ "id").asOpt[String]
-    id.map(id => User(id, nick.getOrElse(id)))
-      .getOrElse(User(nick))
-  }
-    
+      
   def editatorToggleJoin = Action(parse.json) { request =>
-    val user = userFromJson(request.body)
-    val key = (request.body \ "key").asOpt[String]
-    val output: Future[Result] = router.toggleJoin(key, user)
+    val parsed = decodeWithRoomKey[User](request.body.toString)
+    val output: Future[Result] =
+      parsed.map { case (key, user) => router.toggleJoin(key, user) }
+    	.getOrElse(Future.successful(BadRequest("")))
     Async {
       output
     }
   }
 
   def editatorChangeNick = Action(parse.json) { request =>
-    val user = userFromJson(request.body)
-    val key = (request.body \ "key").asOpt[String]
-    key.foreach{ key =>
-    	router.changeNick(key, user)
-    }
+    val parsed = decodeWithRoomKey[User](request.body.toString)
+    parsed.foreach{ case (key, user) => router.changeNick(key, user) }
     Ok("")
   }
   
@@ -52,6 +44,6 @@ object Application extends Controller {
     val in = Iteratee.ignore[JsValue]
     // TODO: get appropriate event stream for instance
     val out = router.broadcast
-    (in, out)
-  }
+    (in, out.map(_.forPlay))
+  }  
 }

@@ -15,11 +15,11 @@ function Content() {
 
 function User() {
 	this.nick = ''
-	this.id;
+	this.id = ''
 }
 
 function Room() {
-	this.key;
+	this.key = ''
 	this.users = []
 	this.setJoined = function(isJoined) {
 		this.isJoined = isJoined
@@ -73,7 +73,6 @@ function Editator($scope, $http) {
 		var ws = new WebSocket(serviceLocation)
 
 		ws.addEventListener('message', function(evt) {
-			alert(evt.data)
 			var msg = angular.fromJson(evt.data)
 			var handler = $scope.handlers[msg.type]
 			if(handler) {

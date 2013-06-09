@@ -7,9 +7,10 @@ case class User(id: String, name: String) {
 }
 
 object User {
-  def apply(name: Option[String]): User = {
-    val id = UUID.randomUUID().toString()
-    User(id, name.filterNot(_.isEmpty).getOrElse(id))
+  def apply(idOpt: Option[String], nameOpt: Option[String]): User = {
+    val id = idOpt.filterNot(_.isEmpty).getOrElse(UUID.randomUUID().toString())
+    val name = nameOpt.filterNot(_.isEmpty).getOrElse(id)
+    User(id, name)
   }
 }
 

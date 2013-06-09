@@ -18,7 +18,10 @@ import uk.co.bhyland.editator.model.EditatorRoom
 import uk.co.bhyland.editator.model.EditatorInstance
 import uk.co.bhyland.editator.messages.ListRooms
 import uk.co.bhyland.editator.messages.RoomListUpdate
-
+import uk.co.bhyland.editator.messages.AsJson
+import argonaut.Json
+import uk.co.bhyland.editator.messages.JsonCodec.AsPlayJsValue
+    
 case class EditatorState(instances: Map[String,EditatorInstance])
 
 object EditatorState {
@@ -29,17 +32,15 @@ class EditatorRouter {
 
   private val (inputEnumerator, inChannel) = Concurrent.broadcast[EditatorInput]
 
-  private val (outputEnumerator, outChannel) = Concurrent.broadcast[JsValue]
+  private val (outputEnumerator, outChannel) = Concurrent.broadcast[Json]
 
-  val broadcast: Enumerator[JsValue] = outputEnumerator
+  val broadcast: Enumerator[Json] = outputEnumerator
 
   private val processor = Iteratee.fold[EditatorInput, EditatorState](EditatorState()) { (state, input) =>
     
     val (nextState, outputMessages) = MessageProcessor.handleInputMessage(state, input)
     
-    outputMessages.foreach { message =>
-      outChannel.push(message.asJson)
-    }
+    outputMessages.foreach { m => outChannel.push(m.json) }
     
     nextState
   }
@@ -48,12 +49,12 @@ class EditatorRouter {
 
   def changeNick(key: String, user: User) = inChannel.push(UpdateNick(key, user))
 
-  def toggleJoin(key: Option[String], user: User) = futureResult { p =>
-    ToggleJoinRoom(key, user, { room => p.success(Ok(ToggleJoinResponse(room.key, room.isMember(user.id), user).asJson)) })
+  def toggleJoin(key: String, user: User) = futureResult { p =>
+    ToggleJoinRoom(key, user, { room => p.success(Ok(ToggleJoinResponse(room.key, room.isMember(user.id), user).json.forPlay)) })
   }
   
   def currentRooms = futureResult { p =>
-    ListRooms({ rooms => p.success(Ok(RoomListUpdate(rooms).asJson)) })
+    ListRooms({ rooms => p.success(Ok(RoomListUpdate(rooms).json.forPlay)) })
   }
   
   def futureResult(input: Promise[Result] => EditatorInput) = {

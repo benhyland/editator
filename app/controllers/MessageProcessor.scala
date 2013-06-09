@@ -13,34 +13,37 @@ object MessageProcessor {
 
   def handleInputMessage(state: EditatorState, input: EditatorInput) : (EditatorState, List[EditatorOutput]) = {
     
-    val key = input.key.getOrElse(UUID.randomUUID().toString())
-    val instance = state.instances.get(key)
+    def instance(key: String) = state.instances.get(key)
     
     def updatedState(instance: Option[EditatorInstance]) = {
-      instance.map(newInstance => EditatorState(state.instances.+((key, newInstance)))).getOrElse(state)
+      instance.map(newInstance => EditatorState(state.instances + ((newInstance.key, newInstance)))).getOrElse(state)
     }
     
-    val nextState: EditatorState = input match {
+    def messages(instance: EditatorInstance) =
+      RoomMembershipUpdate(instance.members.map(_.name)) ::
+      Nil
+      
+    val (nextState, newMessages) = input match {
       case ListRooms(callback) => {
         callback(state.instances.keys.toList)
-        updatedState(None)
+        val s = updatedState(None)
+        (s, Nil)
       } 
-      case UpdateNick(_, user) => {
-        updatedState(instance.map(_.changeNick(user)))
+      case UpdateNick(key, user) => {
+        val newInstance = instance(key).map(_.changeNick(user))
+        val s = updatedState(newInstance)
+        val ms = newInstance.map(messages(_)).getOrElse(Nil)
+        (s, ms)
         
       }
-      case ToggleJoinRoom(_, user, callback) => {
-        val newInstance = instance.getOrElse(EditatorInstance(key)).toggleJoin(user)
+      case ToggleJoinRoom(key, user, callback) => {
+        val newInstance = instance(key).getOrElse(EditatorInstance(key)).toggleJoin(user)
         callback(newInstance)
-        updatedState(Some(newInstance))
+        val s = updatedState(Some(newInstance))
+        (s, messages(s.instances(key)))
       }
     }
-
-    val nextInstance = nextState.instances.get(key)
-    val instanceMessages = nextInstance.map(instance =>
-       List(RoomMembershipUpdate(instance.members.map(_.name)))
-      ).getOrElse(List())
       
-    (nextState, instanceMessages)
+    (nextState, newMessages)
   }
 }
