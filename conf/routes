@@ -1,5 +1,5 @@
 # Websocket for intra-room events
-GET		/editator			controllers.Application.editatorEvents
+GET		/editator/*roomKey/*userId	controllers.Application.editatorEvents(roomKey, userId)
 
 # Start page to load angular and app
 GET		/begin				controllers.Application.editatorBegin

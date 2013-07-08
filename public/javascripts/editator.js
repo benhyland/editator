@@ -4,9 +4,51 @@ var editator = angular.module('editator', [])
 
 editator.directive('edEventsService', function() {
 	return function(scope, element, attrs) {
-		scope.connect(attrs.edEventsService)
+		scope.events = new EditatorEvents(scope, attrs.edEventsService)
 	}
 })
+
+function EditatorEvents(scope, serviceLocation) {
+	this.serviceLocation = serviceLocation
+	this.scope = scope
+	this.ws;
+	
+	this.newEventHandler = function(scope) {
+		return function(evt) {
+			var msg = angular.fromJson(evt.data)
+			var handler = scope.handlers[msg.type]
+			if(handler) {
+				scope.$apply(function(){ handler(msg) })
+			}
+		}
+	}
+	this.eventHandler;
+	
+	this.connect = function(roomKey, userId) {
+		var wsLocation = this.serviceLocation.replace("{roomKey}", roomKey).replace("{userId}", userId)
+		this.ws = new WebSocket(wsLocation)
+		this.eventHandler = this.newEventHandler(this.scope)
+		this.ws.addEventListener('message', this.eventHandler)
+	}
+	
+	this.disconnect = function() {
+		if(this.ws) {
+			this.ws.removeEventListener('message', this.eventHandler)
+			this.ws.close()
+		}
+	}
+	
+	this.notify = function(wasJoined, isJoined, roomKey, userId) {
+		if(wasJoined != isJoined) {
+			if(isJoined) {
+				this.connect(roomKey, userId)
+			}
+			else {
+				this.disconnect()
+			}
+		}
+	}
+}
 
 function Content() {
 	this.text = ''
@@ -43,6 +85,7 @@ function Editator($scope, $http) {
 	$scope.jsonWithKey = function(messageObj) {
 		var message = angular.copy(messageObj)
 		message.key = $scope.room.isJoined ? $scope.room.key : $scope.roomSet.selectedRoom
+		
 		return angular.toJson(message)
 	}
 	
@@ -69,10 +112,13 @@ function Editator($scope, $http) {
 
 	$scope.toggleJoinRoom = function() {
 		$http.post('/joinToggle', $scope.jsonWithKey(this.user)).success( function(data) {
+			var wasJoined = $scope.room.isJoined
 			$scope.room.setJoined(data.isJoined)
 			$scope.roomSet.addRoom(data.roomKey)
 			$scope.room.key = data.roomKey
+			$scope.roomSet.selectedRoom = data.roomKey
 			$scope.user = data.user
+			$scope.events.notify(wasJoined, data.isJoined, data.roomKey, data.user.id)
 		})
 	}
 
@@ -80,17 +126,5 @@ function Editator($scope, $http) {
 		'memberUpdate': function(msg) {
 			$scope.room.users = msg.members
 		},
-	}
-
-	$scope.connect = function(serviceLocation) {
-		var ws = new WebSocket(serviceLocation)
-
-		ws.addEventListener('message', function(evt) {
-			var msg = angular.fromJson(evt.data)
-			var handler = $scope.handlers[msg.type]
-			if(handler) {
-				$scope.$apply(function(){ handler(msg) })
-			}
-		})
 	}
 }

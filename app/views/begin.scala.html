@@ -13,7 +13,7 @@
 		<script src="@routes.Assets.at("javascripts/moment.min.js")"></script>
 		<script src="@routes.Assets.at("javascripts/editator.js")"></script>
 	</head>
-	<body ng-app="editator" ng-controller="Editator" ed-events-service="@routes.Application.editatorEvents().webSocketURL()">
+	<body ng-app="editator" ng-controller="Editator" ed-events-service="@routes.Application.editatorEvents("{roomKey}", "{userId}").webSocketURL()">
 		<div>
 			<span>Existing rooms:</span>
 			<select ng-model="roomSet.selectedRoom">

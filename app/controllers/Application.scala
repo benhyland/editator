@@ -40,10 +40,9 @@ object Application extends Controller {
     Ok("")
   }
   
-  def editatorEvents = WebSocket.using[JsValue] { request =>
+  def editatorEvents(roomKey: String, userId: String) = WebSocket.using[JsValue] { request =>
     val in = Iteratee.ignore[JsValue]
-    // TODO: get appropriate event stream for instance
-    val out = router.broadcast
-    (in, out.map(_.forPlay))
+    val out = router.broadcastFor(roomKey, userId)
+    (in, out)
   }  
 }

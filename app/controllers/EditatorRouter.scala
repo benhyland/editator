@@ -21,44 +21,75 @@ import uk.co.bhyland.editator.messages.RoomListUpdate
 import uk.co.bhyland.editator.messages.AsJson
 import argonaut.Json
 import uk.co.bhyland.editator.messages.JsonCodec.AsPlayJsValue
-    
-case class EditatorState(instances: Map[String,EditatorInstance])
+import play.api.libs.iteratee.Concurrent.Channel
+import uk.co.bhyland.editator.messages.EditatorOutput
+import uk.co.bhyland.editator.messages.AttachUser
+import scala.concurrent.duration._
+import scala.concurrent.Await
+
+case class EditatorState(
+    inputEnumerator: Enumerator[EditatorInput],
+    inputChannel: Channel[EditatorInput],
+    perUserOutput: Map[String, (Channel[JsValue], Enumerator[JsValue])],
+    instances: Map[String,EditatorInstance]) {
+  
+  def withInstance(instance: EditatorInstance) =
+    copy(instances = (instances + ((instance.key, instance))))
+  
+  def withUserOutput(userId: String) = {
+    val outs = Concurrent.broadcast[JsValue]
+    copy(perUserOutput = perUserOutput + (userId -> outs.swap))
+  }
+  def channelsFor(mesage: EditatorOutput) = perUserOutput.values.map(_._1)
+}
 
 object EditatorState {
-  def apply(): EditatorState = EditatorState(Map())
+  def apply(): EditatorState = {
+    val (inputEnumerator, inChannel) = Concurrent.broadcast[EditatorInput]
+    EditatorState(inputEnumerator, inChannel, Map(), Map())
+  }
 }
 
 class EditatorRouter {
 
-  private val (inputEnumerator, inChannel) = Concurrent.broadcast[EditatorInput]
-
-  private val (outputEnumerator, outChannel) = Concurrent.broadcast[Json]
-
-  val broadcast: Enumerator[Json] = outputEnumerator
-
-  private val processor = Iteratee.fold[EditatorInput, EditatorState](EditatorState()) { (state, input) =>
+  private val (inChannel, processor) = {
+    val state = EditatorState()
+    val p = Iteratee.fold[EditatorInput, EditatorState](state) { (state, input) =>
+	  val (nextState, outputMessages) = MessageProcessor.handleInputMessage(state, input)
+	  for {
+	    m <- outputMessages
+	    json = m.json.forPlay	    
+	    c <- nextState.channelsFor(m)
+	  } {
+	    c.push(json)
+	  }
+	  nextState
+    }
     
-    val (nextState, outputMessages) = MessageProcessor.handleInputMessage(state, input)
+    state.inputEnumerator |>> p
     
-    outputMessages.foreach { m => outChannel.push(m.json) }
-    
-    nextState
-  }
-
-  inputEnumerator |>> processor
+    (state.inputChannel, p)
+  }  
 
   def changeNick(key: String, user: User) = inChannel.push(UpdateNick(key, user))
 
-  def toggleJoin(key: String, user: User) = futureResult { p =>
+  def toggleJoin(key: String, user: User) = future[Result] { p =>
     ToggleJoinRoom(key, user, { room => p.success(Ok(ToggleJoinResponse(room.key, room.isMember(user.id), user).json.forPlay)) })
   }
   
-  def currentRooms = futureResult { p =>
+  def currentRooms = future[Result] { p =>
     ListRooms({ rooms => p.success(Ok(RoomListUpdate(rooms).json.forPlay)) })
   }
   
-  def futureResult(input: Promise[Result] => EditatorInput) = {
-    val p = Promise.apply[Result]()
+  def broadcastFor(roomKey: String, userId: String) = {
+    val f = future[Enumerator[JsValue]] { p =>
+      AttachUser(roomKey, userId, { output => p.success(output) })
+    }
+    Await.result(f, 1 seconds)
+  }
+  
+  def future[A](input: Promise[A] => EditatorInput) = {
+    val p = Promise.apply[A]()
     inChannel.push(input(p))
     p.future
   }

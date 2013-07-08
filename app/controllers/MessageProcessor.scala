@@ -8,6 +8,7 @@ import uk.co.bhyland.editator.messages.ToggleJoinRoom
 import java.util.UUID
 import uk.co.bhyland.editator.model.EditatorInstance
 import uk.co.bhyland.editator.messages.RoomMembershipUpdate
+import uk.co.bhyland.editator.messages.AttachUser
 
 object MessageProcessor {
 
@@ -16,14 +17,19 @@ object MessageProcessor {
     def instance(key: String) = state.instances.get(key)
     
     def updatedState(instance: Option[EditatorInstance]) = {
-      instance.map(newInstance => EditatorState(state.instances + ((newInstance.key, newInstance)))).getOrElse(state)
+      instance.map(newInstance => state.withInstance(newInstance)).getOrElse(state)
     }
     
     def messages(instance: EditatorInstance) =
       RoomMembershipUpdate(instance.members.map(_.name)) ::
       Nil
-      
+    
     val (nextState, newMessages) = input match {
+      case AttachUser(key, userId, callback) => {
+        val s = state.withUserOutput(userId)
+        callback(s.perUserOutput(userId)._2)
+        (s, messages(s.instances(key)))
+      }
       case ListRooms(callback) => {
         callback(state.instances.keys.toList)
         val s = updatedState(None)
@@ -37,13 +43,14 @@ object MessageProcessor {
         
       }
       case ToggleJoinRoom(key, user, callback) => {
-        val newInstance = instance(key).getOrElse(EditatorInstance(key)).toggleJoin(user)
+        val roomKey = if(key.isEmpty) UUID.randomUUID().toString() else key
+        val newInstance = instance(roomKey).getOrElse(EditatorInstance(roomKey)).toggleJoin(user)
         callback(newInstance)
         val s = updatedState(Some(newInstance))
         (s, messages(s.instances(key)))
       }
     }
-      
+    
     (nextState, newMessages)
   }
 }
