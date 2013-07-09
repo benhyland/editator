@@ -1,11 +1,11 @@
 @(implicit r: RequestHeader)
 <!DOCTYPE html>
-<html>
+<html lang="en">
 	<head>
-		<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+		<meta charset="utf-8" />
 		<title>Editator</title>
-		<link rel="stylesheet" media="screen" href="@routes.Assets.at("stylesheets/bootstrap.min.css")"> 
-		<link rel="stylesheet" media="screen" href="@routes.Assets.at("stylesheets/main.css")">
+		<link rel="stylesheet" href="@routes.Assets.at("stylesheets/bootstrap.min.css")"> 
+		<link rel="stylesheet" href="@routes.Assets.at("stylesheets/main.css")">
 		<link rel="icon" href="@routes.Assets.at("favicon.ico")">
 		<script src="@routes.Assets.at("javascripts/jquery.min.js")"></script>
 		<script src="@routes.Assets.at("javascripts/bootstrap.min.js")"></script>
@@ -14,28 +14,47 @@
 		<script src="@routes.Assets.at("javascripts/editator.js")"></script>
 	</head>
 	<body ng-app="editator" ng-controller="Editator" ed-events-service="@routes.Application.editatorEvents("{roomKey}", "{userId}").webSocketURL()">
-		<div>
-			<span>Existing rooms:</span>
-			<select ng-model="roomSet.selectedRoom">
-				<option ng-repeat="roomkey in roomSet.rooms()">{{roomkey}}</option>
-			</select>
-			<span>Room: <input type="text" ng-model="roomSet.selectedRoom" size="16"></input></span>
-			<a href="" ng-click="toggleJoinRoom()">{{room.joinLabel}}</a>
+		<header>
+			<hgroup>
+				<h1>Editator</h1>
+				<h2>A toy webapp for collaborative editing</h2>
+			</hgroup>
+		</header>
+		<nav>
+			<ul>
+				<li><a href="https://github.com/benhyland/editator">Code</a></li>
+			</ul>
+		</nav>
+		<section>
+			<h1>Room: {{room.roomLabel}}</h1>
+			<section>
+				<h1>Current users:</h1>
+				<ul>
+					<li ng-repeat="name in room.users">{{name}}</li>
+				</ul>
+			</section>
+			<section>
+				<h1>Existing rooms:</h1>
+				<select ng-model="roomSet.selectedRoom">
+					<option ng-repeat="roomkey in roomSet.rooms()">{{roomkey}}</option>
+				</select>
+				<span>Room: <input type="text" ng-model="roomSet.selectedRoom" size="16"></input></span>
+			</section>
+			<section>
+				<a href="" ng-click="toggleJoinRoom()">{{room.joinLabel}}</a>
+			</section>
+			<section>
+				<h1>Content:</h1>
+				<textarea ng-model="content.text"></textarea>
+			</section>
+		</section>
+		<section>
+			<h1>Profile</h1>
 			<form ng-submit="updateNick()">
 				<span>Nick:</span>
 				<input type="text" ng-model="user.nick" size="24">
 				<input type="submit" value="Update nickname">
 			</form>
-		</div>
-		<div>
-			<span>Current users:</span>
-			<ul>
-				<li ng-repeat="name in room.users">{{name}}</li>
-			</ul>
-		</div>
-		<div>
-			<span>Content:</span>
-			<textarea ng-model="content.text"></textarea>
-		</div>
+		</section>
 	</body>
 </html>
