@@ -67,6 +67,9 @@ function Room() {
 		this.isJoined = isJoined
 		this.joinLabel = this.isJoined ? 'Leave room' : 'Join room'
 	}
+	this.roomLabel = function() {
+		return this.isJoined ? 'Room: ' + this.key : 'Lobby'
+	}
 }
 
 function RoomSet() {

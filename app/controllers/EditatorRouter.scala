@@ -60,7 +60,7 @@ class EditatorRouter {
   private val (inChannel, processor) = {
     val state = EditatorState()
     val p = Iteratee.fold[EditatorInput, EditatorState](state) { (state, input) =>
-	  val (nextState, outputMessages) = MessageProcessor.handleInputMessage(state, input)
+	  val (nextState, outputMessages, postProcessing) = MessageProcessor.handleInputMessage(state, input)
 	  for {
 	    m <- outputMessages
 	    json = m.json.forPlay	    
@@ -68,6 +68,7 @@ class EditatorRouter {
 	  } {
 	    c.push(json)
 	  }
+	  postProcessing()
 	  nextState
     }
     

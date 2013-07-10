@@ -13,7 +13,7 @@ import uk.co.bhyland.editator.messages.UnattachUser
 
 object MessageProcessor {
 
-  def handleInputMessage(state: EditatorState, input: EditatorInput) : (EditatorState, List[EditatorOutput]) = {
+  def handleInputMessage(state: EditatorState, input: EditatorInput) : (EditatorState, List[EditatorOutput], () => Unit) = {
     
     def instance(key: String) = state.instances.get(key)
     
@@ -25,37 +25,34 @@ object MessageProcessor {
       RoomMembershipUpdate(instance.members.map(_.name)) ::
       Nil
     
-    val (nextState, newMessages) = input match {
+    def noOp = () => ()
+      
+    input match {
       case AttachUser(key, userId, callback) => {
         val s = state.withUserOutput(userId)
         callback(s.perUserOutput(userId)._2)
-        (s, messages(s.instances(key)))
+        (s, messages(s.instances(key)), noOp)
       }
       case UnattachUser(key, userId) => {
         val s = state.dropUserOutput(userId)
-        (s, messages(s.instances(key)))
+        (s, messages(s.instances(key)), noOp)
       }
-      case ListRooms(callback) => {
-        callback(state.instances.keys.toList)
-        val s = updatedState(None)
-        (s, Nil)
+      case ListRooms(callback) => {        
+        (state, Nil, { () => callback(state.instances.keys.toList) })
       } 
       case UpdateNick(key, user) => {
         val newInstance = instance(key).map(_.changeNick(user))
         val s = updatedState(newInstance)
         val ms = newInstance.map(messages(_)).getOrElse(Nil)
-        (s, ms)
+        (s, ms, noOp)
         
       }
       case ToggleJoinRoom(key, user, callback) => {
         val roomKey = if(key.isEmpty) UUID.randomUUID().toString() else key
         val newInstance = instance(roomKey).getOrElse(EditatorInstance(roomKey)).toggleJoin(user)
-        callback(newInstance)
         val s = updatedState(Some(newInstance))
-        (s, messages(s.instances(key)))
+        (s, messages(s.instances(key)), { () => callback(newInstance) })
       }
     }
-    
-    (nextState, newMessages)
   }
 }

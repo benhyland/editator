@@ -26,24 +26,24 @@
 			</ul>
 		</nav>
 		<section>
-			<h1>Room: {{room.roomLabel}}</h1>
-			<section>
+			<h1>{{room.roomLabel()}}</h1>
+			<section ng-show="room.isJoined">
 				<h1>Current users:</h1>
 				<ul>
 					<li ng-repeat="name in room.users">{{name}}</li>
 				</ul>
 			</section>
-			<section>
-				<h1>Existing rooms:</h1>
+			<section ng-hide="room.isJoined">
+				<h1>Join a room:</h1>
 				<select ng-model="roomSet.selectedRoom">
 					<option ng-repeat="roomkey in roomSet.rooms()">{{roomkey}}</option>
 				</select>
-				<span>Room: <input type="text" ng-model="roomSet.selectedRoom" size="16"></input></span>
+				<span>Room key: <input type="text" ng-model="roomSet.selectedRoom" size="16"></input></span>
 			</section>
 			<section>
 				<a href="" ng-click="toggleJoinRoom()">{{room.joinLabel}}</a>
 			</section>
-			<section>
+			<section ng-show="room.isJoined">
 				<h1>Content:</h1>
 				<textarea ng-model="content.text"></textarea>
 			</section>
