@@ -9,6 +9,7 @@ import java.util.UUID
 import uk.co.bhyland.editator.model.EditatorInstance
 import uk.co.bhyland.editator.messages.RoomMembershipUpdate
 import uk.co.bhyland.editator.messages.AttachUser
+import uk.co.bhyland.editator.messages.UnattachUser
 
 object MessageProcessor {
 
@@ -28,6 +29,10 @@ object MessageProcessor {
       case AttachUser(key, userId, callback) => {
         val s = state.withUserOutput(userId)
         callback(s.perUserOutput(userId)._2)
+        (s, messages(s.instances(key)))
+      }
+      case UnattachUser(key, userId) => {
+        val s = state.dropUserOutput(userId)
         (s, messages(s.instances(key)))
       }
       case ListRooms(callback) => {

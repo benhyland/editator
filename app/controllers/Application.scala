@@ -41,7 +41,7 @@ object Application extends Controller {
   }
   
   def editatorEvents(roomKey: String, userId: String) = WebSocket.using[JsValue] { request =>
-    val in = Iteratee.ignore[JsValue]
+    val in = Iteratee.ignore[JsValue].mapDone{ _ => router.unattach(roomKey, userId) }
     val out = router.broadcastFor(roomKey, userId)
     (in, out)
   }  

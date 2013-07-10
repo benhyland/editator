@@ -26,6 +26,7 @@ import uk.co.bhyland.editator.messages.EditatorOutput
 import uk.co.bhyland.editator.messages.AttachUser
 import scala.concurrent.duration._
 import scala.concurrent.Await
+import uk.co.bhyland.editator.messages.UnattachUser
 
 case class EditatorState(
     inputEnumerator: Enumerator[EditatorInput],
@@ -39,6 +40,10 @@ case class EditatorState(
   def withUserOutput(userId: String) = {
     val outs = Concurrent.broadcast[JsValue]
     copy(perUserOutput = perUserOutput + (userId -> outs.swap))
+  }
+  def dropUserOutput(userId: String) = {
+    perUserOutput.get(userId).map(_._1).foreach(_.eofAndEnd)
+    copy(perUserOutput = perUserOutput - userId)
   }
   def channelsFor(mesage: EditatorOutput) = perUserOutput.values.map(_._1)
 }
@@ -87,6 +92,8 @@ class EditatorRouter {
     }
     Await.result(f, 1 seconds)
   }
+  
+  def unattach(roomKey: String, userId: String) = inChannel.push(UnattachUser(roomKey, userId))
   
   def future[A](input: Promise[A] => EditatorInput) = {
     val p = Promise.apply[A]()
