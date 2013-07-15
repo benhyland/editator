@@ -47,6 +47,14 @@
 				<h1>Content:</h1>
 				<textarea ng-model="content.text"></textarea>
 			</section>
+			<section ng-show="room.isJoined">
+				<h1>Chat:</h1>
+				<p ng-repeat="msg in room.messages">{{msg}}</p>
+				<form ng-submit="sendMessage()">
+					<input type="text" ng-model="room.blah" placeholder="insert blah to continue"></input>
+					<input type="submit" value="Send blah"></input>
+				</form>
+			</section>
 		</section>
 		<section>
 			<h1>Profile</h1>

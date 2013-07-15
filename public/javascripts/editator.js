@@ -70,6 +70,8 @@ function Room() {
 	this.roomLabel = function() {
 		return this.isJoined ? 'Room: ' + this.key : 'Lobby'
 	}
+	this.blah;
+	this.messages = ['hello', 'world']
 }
 
 function RoomSet() {
@@ -92,6 +94,14 @@ function Editator($scope, $http) {
 		return angular.toJson(message)
 	}
 	
+	$scope.chatMessage = function(blah) {
+		var message = {
+			'blah': blah,
+			'user': $scope.user
+		}
+		return message;
+	}
+
 	$scope.content = new Content()
 
 	$scope.room = new Room()
@@ -123,6 +133,10 @@ function Editator($scope, $http) {
 			$scope.user = data.user
 			$scope.events.notify(wasJoined, data.isJoined, data.roomKey, data.user.id)
 		})
+	}
+
+	$scope.sendMessage = function() {
+		$http.post('/chat', $scope.jsonWithKey($scope.chatMessage($scope.room.blah)))
 	}
 
 	$scope.handlers = {
