@@ -13,6 +13,9 @@ POST	/joinToggle			controllers.Application.editatorToggleJoin
 # change nickname (if currently in room)
 POST	/nick				controllers.Application.editatorChangeNick
 
+# broadcast a message (if currently in room)
+POST	/chat				controllers.Application.editatorChat
+
 # Map static resources from the /public folder to the /assets URL path
 GET		/favicon.ico		controllers.Assets.at(path="/public", file="images/favicon.ico")
 GET		/assets/*file		controllers.Assets.at(path="/public", file)

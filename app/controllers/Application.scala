@@ -6,8 +6,7 @@ import play.api.libs.json.JsValue
 import scala.concurrent.Future
 import uk.co.bhyland.editator.model.User
 import uk.co.bhyland.editator.messages.JsonCodec._
-import argonaut._
-import Argonaut._
+import uk.co.bhyland.editator.messages.Talk
 
 object Application extends Controller {
   
@@ -25,7 +24,7 @@ object Application extends Controller {
   }
       
   def editatorToggleJoin = Action(parse.json) { request =>
-    val parsed = decodeWithRoomKey[User](request.body.toString)
+    val parsed = decodeWithRoomKeyAs[User](request.body.toString)
     val output: Future[Result] =
       parsed.map { case (key, user) => router.toggleJoin(key, user) }
     	.getOrElse(Future.successful(BadRequest("")))
@@ -35,8 +34,14 @@ object Application extends Controller {
   }
 
   def editatorChangeNick = Action(parse.json) { request =>
-    val parsed = decodeWithRoomKey[User](request.body.toString)
+    val parsed = decodeWithRoomKeyAs[User](request.body.toString)
     parsed.foreach{ case (key, user) => router.changeNick(key, user) }
+    Ok("")
+  }
+
+  def editatorChat = Action(parse.json) { request =>
+    val parsed = decodeAs[Talk](request.body.toString)
+    parsed.foreach{ t => router.talk(t) }
     Ok("")
   }
   

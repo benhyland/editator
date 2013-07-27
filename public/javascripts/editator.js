@@ -143,5 +143,8 @@ function Editator($scope, $http) {
 		'memberUpdate': function(msg) {
 			$scope.room.users = msg.members
 		},
+		'roomMessage': function(msg) {
+			$scope.room.messages = [msg.from + ' @ ' + msg.time + ' : ' + msg.text]
+		},
 	}
 }

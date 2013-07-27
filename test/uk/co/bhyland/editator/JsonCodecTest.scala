@@ -6,12 +6,14 @@ import uk.co.bhyland.editator.messages.JsonCodec._
 import uk.co.bhyland.editator.model.User
 import uk.co.bhyland.editator.messages.ToggleJoinResponse
 import uk.co.bhyland.editator.messages.RoomMembershipUpdate
+import uk.co.bhyland.editator.messages.RoomMessageEvent
+import org.joda.time.DateTime
 
 class JsonCodecTest extends FunSuite with ShouldMatchers {
 
   test("decodeWithRoomKey on user without id should decode a key and user") {
     val in = """{"nick":"bob","id":"","key":"#room"}"""
-    val parsed = decodeWithRoomKey[User](in)
+    val parsed = decodeWithRoomKeyAs[User](in)
   
     parsed should be ('defined)
     parsed foreach { case (key, user) =>
@@ -23,10 +25,10 @@ class JsonCodecTest extends FunSuite with ShouldMatchers {
   
   test("decodeWithRoomKey on user without id or nick should decode a key and user") {
     val in1 = """{"key":"#room"}"""
-    val parsed1 = decodeWithRoomKey[User](in1)
+    val parsed1 = decodeWithRoomKeyAs[User](in1)
 
     val in2 = """{"key":"#room","nick":""}"""
-    val parsed2 = decodeWithRoomKey[User](in1)
+    val parsed2 = decodeWithRoomKeyAs[User](in1)
     
     checkParse(parsed1)
     checkParse(parsed2)
@@ -59,15 +61,29 @@ class JsonCodecTest extends FunSuite with ShouldMatchers {
   
   test("encodeWithMessageType on RoomMembershipUpdate should encode to correct json string") {
     val rmu = RoomMembershipUpdate(List("a", "b", "c"))
-    val json = encodeWithMessageType("blah", rmu)
+    val json = encodeWithMessageTypeAs("blah", rmu)
     val expected =
    """|{
       |  "type" : "blah",
-      |  "nicks" : [
+      |  "members" : [
       |    "a",
       |    "b",
       |    "c"
       |  ]
+      |}""".stripMargin
+      
+    json.spaces2 should be (expected)
+  }
+  
+  test("encodeWithMessageType on RoomMessageEvent should encode to correct json string") {
+    val rme = RoomMessageEvent("id", new DateTime(123456789L), "message")
+    val json = encodeWithMessageTypeAs("blah", rme)
+    val expected =
+   """|{
+      |  "type" : "blah",
+      |  "from" : "id",
+      |  "time" : "1970-01-02 10:17:36 +0000",
+      |  "text" : "message"
       |}""".stripMargin
       
     json.spaces2 should be (expected)

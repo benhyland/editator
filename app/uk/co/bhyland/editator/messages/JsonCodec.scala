@@ -11,7 +11,7 @@ object JsonCodec {
     def forPlay = play.api.libs.json.Json.parse(json.nospaces)
   }
 
-  implicit val dateTimeEncode = EncodeJson((d: DateTime) => jString(d.toString("YYYY-MM-DDTHH:mm:ss Z")))
+  implicit val dateTimeEncode = EncodeJson((d: DateTime) => jString(d.toString("YYYY-MM-DD HH:mm:ss Z")))
   
   // TODO: see if there is still a prepend bug?
   implicit val userCodec = CodecJson[User](
@@ -29,13 +29,19 @@ object JsonCodec {
   implicit val roomListUpdateEncode = jencode1L((rlu: RoomListUpdate) => (rlu.rooms))("rooms")
   implicit val toggleJoinResponseEncode = jencode3L((tjr: ToggleJoinResponse) => (tjr.roomKey, tjr.isJoined, tjr.user))("roomKey", "isJoined", "user")  
   
-  def encodeWithMessageType[A](messageType: String, a: A)(implicit encode: EncodeJson[A]) : Json = {
+  implicit val talkDecode = jdecode3L((roomKey: String, user: User, message: String) => Talk(roomKey, user, message))("key", "user", "blah")
+  
+  def encodeWithMessageTypeAs[A](messageType: String, a: A)(implicit encode: EncodeJson[A]) : Json = {
     jSingleObject("type", messageType.asJson).deepmerge(a.asJson) 
   }
 
   val keyDecode = DecodeJson(c => (c --\ "key").as[String])
-  def decodeWithRoomKey[A](text: String)(implicit decode: DecodeJson[A]) : Option[(String, A)] = {
+  def decodeWithRoomKeyAs[A](text: String)(implicit decode: DecodeJson[A]) : Option[(String, A)] = {
     val withKeyDecode = keyDecode &&& decode
     text.decodeOption(withKeyDecode)
+  }
+  
+  def decodeAs[A](text: String)(implicit decode: DecodeJson[A]) : Option[A] = {
+    text.decodeOption(decode)
   }
 }

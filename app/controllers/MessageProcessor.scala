@@ -10,6 +10,9 @@ import uk.co.bhyland.editator.model.EditatorInstance
 import uk.co.bhyland.editator.messages.RoomMembershipUpdate
 import uk.co.bhyland.editator.messages.AttachUser
 import uk.co.bhyland.editator.messages.UnattachUser
+import uk.co.bhyland.editator.messages.Talk
+import uk.co.bhyland.editator.messages.RoomMessageEvent
+import org.joda.time.DateTime
 
 object MessageProcessor {
 
@@ -52,6 +55,9 @@ object MessageProcessor {
         val newInstance = instance(roomKey).getOrElse(EditatorInstance(roomKey)).toggleJoin(user)
         val s = updatedState(Some(newInstance))
         (s, messages(s.instances(key)), { () => callback(newInstance) })
+      }
+      case Talk(key, user, message) => {
+        (state, List(RoomMessageEvent(user.id, DateTime.now, message)), noOp)
       }
     }
   }

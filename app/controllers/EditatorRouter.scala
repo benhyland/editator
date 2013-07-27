@@ -27,6 +27,7 @@ import uk.co.bhyland.editator.messages.AttachUser
 import scala.concurrent.duration._
 import scala.concurrent.Await
 import uk.co.bhyland.editator.messages.UnattachUser
+import uk.co.bhyland.editator.messages.Talk
 
 case class EditatorState(
     inputEnumerator: Enumerator[EditatorInput],
@@ -79,6 +80,8 @@ class EditatorRouter {
 
   def changeNick(key: String, user: User) = inChannel.push(UpdateNick(key, user))
 
+  def talk(that: Talk) = inChannel.push(that)
+  
   def toggleJoin(key: String, user: User) = future[Result] { p =>
     ToggleJoinRoom(key, user, { room => p.success(Ok(ToggleJoinResponse(room.key, room.isMember(user.id), user).json.forPlay)) })
   }

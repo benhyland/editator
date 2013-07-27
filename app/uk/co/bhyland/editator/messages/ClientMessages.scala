@@ -14,15 +14,15 @@ trait AsJson {
 sealed trait EditatorOutput extends AsJson
 
 case class RoomMembershipUpdate(nicks: List[String]) extends EditatorOutput {
-  override def json = encodeWithMessageType("memberUpdate", this)
+  override def json = encodeWithMessageTypeAs("memberUpdate", this)
 }
 
 case class RoomMessageEvent(from: String, timestamp: DateTime, message: String) extends EditatorOutput {
-  override def json = encodeWithMessageType("roomMessage", this)      
+  override def json = encodeWithMessageTypeAs("roomMessage", this)      
 }
 
 case class SyncEvent(patch: String, checksum: String) extends EditatorOutput {
-  override def json = encodeWithMessageType("sync", this)
+  override def json = encodeWithMessageTypeAs("sync", this)
 }
 
 // response messages still go to the client as json

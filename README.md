@@ -12,6 +12,6 @@ It is a toy project intended to help learn new hotness, including
 - [websockets](http://tools.ietf.org/html/rfc6455/)
 - [angularJS](http://angularjs.org/)
 - Neil Fraser's [differential synchronisation](http://neil.fraser.name/writing/sync/)
-- pure function json from [argonaut](http://argonaut.io/)
+- pure functional json from [argonaut](http://argonaut.io/)
 - [html5](http://diveintohtml5.info/) structural elements
-- [bootstrap](http://twitter.github.io/bootstrap/) and other tips along the lines of [darkgreener's article](http://24ways.org/2012/how-to-make-your-site-look-half-decent/)
+- basic css, e.g. [bootstrap](http://twitter.github.io/bootstrap/) and other tips along the lines of [darkgreener's article](http://24ways.org/2012/how-to-make-your-site-look-half-decent/)
