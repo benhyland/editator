@@ -71,7 +71,7 @@ function Room() {
 		return this.isJoined ? 'Room: ' + this.key : 'Lobby'
 	}
 	this.blah;
-	this.messages = ['hello', 'world']
+	this.messages = []
 }
 
 function RoomSet() {
@@ -138,13 +138,22 @@ function Editator($scope, $http) {
 	$scope.sendMessage = function() {
 		$http.post('/chat', $scope.jsonWithKey($scope.chatMessage($scope.room.blah)))
 	}
+	
+	$scope.getNick = function(userId) {
+		for(var i = 0; i < $scope.room.users.length; i++) {
+			if($scope.room.users[i].id == userId) {
+				return $scope.room.users[i].nick
+			}
+		}
+		return userId
+	}
 
 	$scope.handlers = {
 		'memberUpdate': function(msg) {
 			$scope.room.users = msg.members
 		},
-		'roomMessage': function(msg) {
-			$scope.room.messages = [msg.from + ' @ ' + msg.time + ' : ' + msg.text]
+		'chatMessage': function(msg) {
+			$scope.room.messages.push(msg)
 		},
 	}
 }

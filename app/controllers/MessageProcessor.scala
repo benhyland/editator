@@ -25,7 +25,7 @@ object MessageProcessor {
     }
     
     def messages(instance: EditatorInstance) =
-      RoomMembershipUpdate(instance.members.map(_.name)) ::
+      RoomMembershipUpdate(instance.members) ::
       Nil
     
     def noOp = () => ()

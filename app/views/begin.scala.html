@@ -30,7 +30,7 @@
 			<section ng-show="room.isJoined">
 				<h1>Current users:</h1>
 				<ul>
-					<li ng-repeat="name in room.users">{{name}}</li>
+					<li ng-repeat="user in room.users">{{user.nick}}</li>
 				</ul>
 			</section>
 			<section ng-hide="room.isJoined">
@@ -49,7 +49,7 @@
 			</section>
 			<section ng-show="room.isJoined">
 				<h1>Chat:</h1>
-				<p ng-repeat="msg in room.messages">{{msg}}</p>
+				<p ng-repeat="msg in room.messages">{{getNick(msg.from)}} @@ {{msg.time}} : {{msg.text}}</p>
 				<form ng-submit="sendMessage()">
 					<input type="text" ng-model="room.blah" placeholder="insert blah to continue"></input>
 					<input type="submit" value="Send blah"></input>

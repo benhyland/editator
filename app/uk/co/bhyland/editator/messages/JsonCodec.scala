@@ -22,7 +22,7 @@ object JsonCodec {
       DecodeResult.ok(User(id.toOption, name.toOption))
     })
   
-  implicit val roomMembershipUpdateEncode = jencode1L((rmu: RoomMembershipUpdate) => (rmu.nicks))("members")
+  implicit val roomMembershipUpdateEncode = jencode1L((rmu: RoomMembershipUpdate) => (rmu.users))("members")
   implicit val roomMessageEventEncode = jencode3L((rme: RoomMessageEvent) => (rme.from, rme.timestamp, rme.message))("from", "time", "text")  
   implicit val syncEventEncode = jencode2L((se: SyncEvent) => (se.patch, se.checksum))("patch", "check")
   
