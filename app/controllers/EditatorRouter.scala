@@ -28,6 +28,7 @@ import scala.concurrent.duration._
 import scala.concurrent.Await
 import uk.co.bhyland.editator.messages.UnattachUser
 import uk.co.bhyland.editator.messages.Talk
+import uk.co.bhyland.editator.messages.RoomMessageEvent
 
 case class EditatorState(
     inputEnumerator: Enumerator[EditatorInput],
@@ -46,7 +47,17 @@ case class EditatorState(
     perUserOutput.get(userId).map(_._1).foreach(_.eofAndEnd)
     copy(perUserOutput = perUserOutput - userId)
   }
-  def channelsFor(mesage: EditatorOutput) = perUserOutput.values.map(_._1)
+  def channelsFor(message: EditatorOutput): Iterable[Channel[JsValue]] = {
+    def messageIsForUser(userId: String) = message match {
+	  case RoomMessageEvent(roomId, _, _, _) => userIsInRoom(userId, roomId)
+	  case _ => true
+	}
+    
+    def userIsInRoom(userId: String, roomId: String) = {
+      instances.get(roomId).map(_.users.exists(_.id == userId)).getOrElse(false)
+    }
+    perUserOutput.filterKeys(messageIsForUser(_)).values.map(_._1)
+  }
 }
 
 object EditatorState {

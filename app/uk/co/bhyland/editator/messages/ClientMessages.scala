@@ -17,7 +17,7 @@ case class RoomMembershipUpdate(users: List[User]) extends EditatorOutput {
   override def json = encodeWithMessageTypeAs("memberUpdate", this)
 }
 
-case class RoomMessageEvent(from: String, timestamp: DateTime, message: String) extends EditatorOutput {
+case class RoomMessageEvent(roomId: String, from: String, timestamp: DateTime, message: String) extends EditatorOutput {
   override def json = encodeWithMessageTypeAs("chatMessage", this)      
 }
 

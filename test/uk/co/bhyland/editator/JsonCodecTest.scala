@@ -60,15 +60,24 @@ class JsonCodecTest extends FunSuite with ShouldMatchers {
   }
   
   test("encodeWithMessageType on RoomMembershipUpdate should encode to correct json string") {
-    val rmu = RoomMembershipUpdate(List("a", "b", "c"))
+    val rmu = RoomMembershipUpdate(List(User("a", "1"), User("b", "2"), User("c", "3")))
     val json = encodeWithMessageTypeAs("blah", rmu)
     val expected =
    """|{
       |  "type" : "blah",
       |  "members" : [
-      |    "a",
-      |    "b",
-      |    "c"
+      |    {
+      |      "id" : "a",
+      |      "nick" : "1"
+      |    },
+      |    {
+      |      "id" : "b",
+      |      "nick" : "2"
+      |    },
+      |    {
+      |      "id" : "c",
+      |      "nick" : "3"
+      |    }
       |  ]
       |}""".stripMargin
       
@@ -76,7 +85,7 @@ class JsonCodecTest extends FunSuite with ShouldMatchers {
   }
   
   test("encodeWithMessageType on RoomMessageEvent should encode to correct json string") {
-    val rme = RoomMessageEvent("id", new DateTime(123456789L), "message")
+    val rme = RoomMessageEvent("key", "id", new DateTime(123456789L), "message")
     val json = encodeWithMessageTypeAs("blah", rme)
     val expected =
    """|{

@@ -57,7 +57,7 @@ object MessageProcessor {
         (s, messages(s.instances(key)), { () => callback(newInstance) })
       }
       case Talk(key, user, message) => {
-        (state, List(RoomMessageEvent(user.id, DateTime.now, message)), noOp)
+        (state, List(RoomMessageEvent(key, user.id, DateTime.now, message)), noOp)
       }
     }
   }
