@@ -38,21 +38,21 @@
 				<select ng-model="roomSet.selectedRoom">
 					<option ng-repeat="roomkey in roomSet.rooms()">{{roomkey}}</option>
 				</select>
-				<span>Room key: <input type="text" ng-model="roomSet.selectedRoom" size="16"></input></span>
+				<span>Room key: <input type="text" ng-model="roomSet.selectedRoom" size="16"></span>
 			</section>
 			<section>
 				<a href="" ng-click="toggleJoinRoom()">{{room.joinLabel}}</a>
 			</section>
 			<section ng-show="room.isJoined">
 				<h1>Content:</h1>
-				<textarea ng-model="content.text"></textarea>
+				<textarea ng-model="content.text" ng-disabled="content.disabled()"></textarea>
 			</section>
 			<section ng-show="room.isJoined">
 				<h1>Chat:</h1>
 				<p ng-repeat="msg in room.messages">{{getNick(msg.from)}} @@ {{msg.time}} : {{msg.text}}</p>
 				<form ng-submit="sendMessage()">
-					<input type="text" ng-model="room.blah" placeholder="insert blah to continue"></input>
-					<input type="submit" value="Send blah"></input>
+					<input type="text" ng-model="room.blah" placeholder="insert blah to continue">
+					<input type="submit" value="Send blah">
 				</form>
 			</section>
 		</section>

@@ -13,6 +13,8 @@ import uk.co.bhyland.editator.messages.UnattachUser
 import uk.co.bhyland.editator.messages.Talk
 import uk.co.bhyland.editator.messages.RoomMessageEvent
 import org.joda.time.DateTime
+import uk.co.bhyland.editator.messages.FullSyncRequest
+import uk.co.bhyland.editator.messages.SyncEvent
 
 object MessageProcessor {
 
@@ -37,7 +39,8 @@ object MessageProcessor {
         (s, messages(s.instances(key)), noOp)
       }
       case UnattachUser(key, userId) => {
-        val s = state.dropUserOutput(userId)
+        val newInstance = instance(key).map(_.leave(userId))
+        val s = updatedState(newInstance).dropUserOutput(userId)
         (s, messages(s.instances(key)), noOp)
       }
       case ListRooms(callback) => {        
@@ -58,6 +61,9 @@ object MessageProcessor {
       }
       case Talk(key, user, message) => {
         (state, List(RoomMessageEvent(key, user.id, DateTime.now, message)), noOp)
+      }
+      case FullSyncRequest(key, userId) => {
+        (state, List(SyncEvent("patch", "check")), noOp)
       }
     }
   }

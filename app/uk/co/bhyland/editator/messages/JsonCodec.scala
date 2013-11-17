@@ -24,12 +24,13 @@ object JsonCodec {
   
   implicit val roomMembershipUpdateEncode = jencode1L((rmu: RoomMembershipUpdate) => (rmu.users))("members")
   implicit val roomMessageEventEncode = jencode3L((rme: RoomMessageEvent) => (rme.from, rme.timestamp, rme.message))("from", "time", "text")  
-  implicit val syncEventEncode = jencode2L((se: SyncEvent) => (se.patch, se.checksum))("patch", "check")
+  implicit val syncEventEncode = jencode2L((se: SyncEvent) => (se.patch, se.checksum))("patch", "checksum")
   
   implicit val roomListUpdateEncode = jencode1L((rlu: RoomListUpdate) => (rlu.rooms))("rooms")
   implicit val toggleJoinResponseEncode = jencode3L((tjr: ToggleJoinResponse) => (tjr.roomKey, tjr.isJoined, tjr.user))("roomKey", "isJoined", "user")  
   
   implicit val talkDecode = jdecode3L((roomKey: String, user: User, message: String) => Talk(roomKey, user, message))("key", "user", "blah")
+  implicit val fullSyncDecode = jdecode2L((roomKey: String, userId: String) => FullSyncRequest(roomKey, userId))("roomKey", "userId")
   
   def encodeWithMessageTypeAs[A](messageType: String, a: A)(implicit encode: EncodeJson[A]) : Json = {
     jSingleObject("type", messageType.asJson).deepmerge(a.asJson) 

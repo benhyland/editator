@@ -20,4 +20,4 @@ case class ToggleJoinRoom(roomKey: String, user: User, callback: Room[_] => Unit
 case class Talk(roomKey: String, user: User, message: String) extends HasKey
   
 case class Sync(roomKey: String, patch: String, checksum: String) extends HasKey
-case class FullSyncRequest(roomKey: String) extends HasKey
+case class FullSyncRequest(roomKey: String, userId: String) extends HasKey

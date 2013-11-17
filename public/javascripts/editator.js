@@ -48,12 +48,26 @@ function EditatorEvents(scope, serviceLocation) {
 			}
 		}
 	}
+	
+	this.send = function(msg, isJoined) {
+		if(this.ws && isJoined) {
+			this.ws.send(msg)
+		}
+	}
 }
 
 function Content() {
-	this.text = ''
+	this.text = 'hello world'
+	this.shadow = ''
+	this.fullSyncRequested = true
+	this.disabled = function() {
+		return this.fullSyncRequested
+	}
+	this.update = function(sync) {
+		this.fullSyncRequested = false
+		this.text = sync.patch + ': ' + sync.checksum
+	}
 }
-
 
 function User() {
 	this.nick = ''
@@ -85,7 +99,7 @@ function RoomSet() {
 	}
 }
 
-function Editator($scope, $http) {
+function Editator($scope, $http, $timeout) {
 	
 	$scope.jsonWithKey = function(messageObj) {
 		var message = angular.copy(messageObj)
@@ -102,7 +116,36 @@ function Editator($scope, $http) {
 		return message;
 	}
 
+	$scope.fullSync = function() {
+		var message = {
+			'roomKey': $scope.room.key,
+			'userId': $scope.user.id
+		}
+		return angular.toJson(message);
+	}
+
+	var contentLoopTimeMillis = 5000
 	$scope.content = new Content()
+	$scope.fullSyncTick = function() {
+	
+		$scope.content.fullSyncRequested = true
+		// send full sync request
+		$scope.events.send($scope.fullSync(), $scope.room.isJoined)
+		
+		// on timeout or error, schedule full sync
+		// on good response, update content text and shadow, set versions(0,1), schedule differentialSync
+		$timeout($scope.fullSyncTick, contentLoopTimeMillis)
+	}
+	$scope.differentialSyncTick = function() {
+		
+		$scope.content.fullSyncRequested = false
+		// send differential sync request
+		
+		// on timeout or error, schedule full sync - pessimistic but simple and needs no backups
+		// on good response, update content text and shadow, set versions, schedule differentialSync
+	}
+	
+	$timeout($scope.fullSyncTick, contentLoopTimeMillis)
 
 	$scope.room = new Room()
 	$scope.room.setJoined(false)
@@ -155,5 +198,8 @@ function Editator($scope, $http) {
 		'chatMessage': function(msg) {
 			$scope.room.messages.push(msg)
 		},
+		'sync': function(msg) {
+			$scope.content.update(msg)
+		}
 	}
 }

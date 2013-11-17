@@ -29,6 +29,7 @@ import scala.concurrent.Await
 import uk.co.bhyland.editator.messages.UnattachUser
 import uk.co.bhyland.editator.messages.Talk
 import uk.co.bhyland.editator.messages.RoomMessageEvent
+import uk.co.bhyland.editator.messages.FullSyncRequest
 
 case class EditatorState(
     inputEnumerator: Enumerator[EditatorInput],
@@ -96,6 +97,8 @@ class EditatorRouter {
   def toggleJoin(key: String, user: User) = future[Result] { p =>
     ToggleJoinRoom(key, user, { room => p.success(Ok(ToggleJoinResponse(room.key, room.isMember(user.id), user).json.forPlay)) })
   }
+  
+  def fullSync(request: FullSyncRequest) = inChannel.push(request)
   
   def currentRooms = future[Result] { p =>
     ListRooms({ rooms => p.success(Ok(RoomListUpdate(rooms).json.forPlay)) })
