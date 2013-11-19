@@ -7,7 +7,6 @@ import scala.concurrent.Future
 import uk.co.bhyland.editator.model.User
 import uk.co.bhyland.editator.messages.JsonCodec._
 import uk.co.bhyland.editator.messages.Talk
-import uk.co.bhyland.editator.messages.FullSyncRequest
 
 object Application extends Controller {
   
@@ -48,8 +47,10 @@ object Application extends Controller {
   
   def editatorEvents(roomKey: String, userId: String) = WebSocket.using[JsValue] { request =>
     val in = Iteratee.foreach[JsValue](json => {
-      val parsed = decodeAs[FullSyncRequest](json.toString)
-      parsed.foreach{ r => router.fullSync(r) }
+      import argonaut._
+      import Argonaut._
+      val parsed = json.toString.decodeOption(syncDecode)
+      parsed.foreach{ r => router.syncRequest(r) }
     }).mapDone { _ => router.unattach(roomKey, userId) }
     val out = router.broadcastFor(roomKey, userId)
     (in, out)

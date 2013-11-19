@@ -7,7 +7,9 @@ import uk.co.bhyland.editator.model.User
 import uk.co.bhyland.editator.messages.ToggleJoinResponse
 import uk.co.bhyland.editator.messages.RoomMembershipUpdate
 import uk.co.bhyland.editator.messages.RoomMessageEvent
+import uk.co.bhyland.editator.messages.DifferentialSyncRequest
 import org.joda.time.DateTime
+import uk.co.bhyland.editator.messages.FullSyncRequest
 
 class JsonCodecTest extends FunSuite with ShouldMatchers {
 
@@ -96,5 +98,39 @@ class JsonCodecTest extends FunSuite with ShouldMatchers {
       |}""".stripMargin
       
     json.spaces2 should be (expected)
+  }
+  
+  test("DifferentialSyncRequest should decode correctly") {
+    val in = """{"sync":"","roomKey":"#room","userId":"bob"}"""
+    val parsed = decodeAs[DifferentialSyncRequest](in)
+  
+    parsed should be ('defined)
+    parsed foreach { se =>
+      se.roomKey should be ("#room")
+      se.userId should be ("bob")
+    }
+  }
+  
+  test("FullSyncRequest should decode correctly") {
+    val in = """{"resync":"","roomKey":"#room","userId":"bob"}"""
+    val parsed = decodeAs[FullSyncRequest](in)
+  
+    parsed should be ('defined)
+    parsed foreach { se =>
+      se.roomKey should be ("#room")
+      se.userId should be ("bob")
+    }
+  }
+  
+  test("SyncRequest disjunction should decode correctly") {
+    import argonaut._
+    import Argonaut._
+    val in = """{"resync":"","roomKey":"#room","userId":"bob"}"""
+    val parsed = in.decodeOption(syncDecode)
+    
+    parsed should be ('defined)
+    parsed foreach { se =>
+      se.roomKey should be ("#room")
+    }
   }
 }

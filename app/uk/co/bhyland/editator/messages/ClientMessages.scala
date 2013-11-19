@@ -25,6 +25,10 @@ case class SyncEvent(patch: String, checksum: String) extends EditatorOutput {
   override def json = encodeWithMessageTypeAs("sync", this)
 }
 
+case class FullSyncEvent(text: String) extends EditatorOutput {
+  override def json = encodeWithMessageTypeAs("resync", this)
+}
+
 // response messages still go to the client as json
 // but are synchronous responses rather than websocket events
 
@@ -35,6 +39,3 @@ case class RoomListUpdate(rooms: List[String]) extends AsJson {
 case class ToggleJoinResponse(roomKey: String, isJoined: Boolean, user: User) extends AsJson {
   override def json = this.asJson
 }
-
-// ??
-case class FullSyncResponse(content: String)

@@ -14,7 +14,9 @@ import uk.co.bhyland.editator.messages.Talk
 import uk.co.bhyland.editator.messages.RoomMessageEvent
 import org.joda.time.DateTime
 import uk.co.bhyland.editator.messages.FullSyncRequest
+import uk.co.bhyland.editator.messages.FullSyncEvent
 import uk.co.bhyland.editator.messages.SyncEvent
+import uk.co.bhyland.editator.messages.DifferentialSyncRequest
 
 object MessageProcessor {
 
@@ -63,6 +65,9 @@ object MessageProcessor {
         (state, List(RoomMessageEvent(key, user.id, DateTime.now, message)), noOp)
       }
       case FullSyncRequest(key, userId) => {
+        (state, List(FullSyncEvent("hello world")), noOp)
+      }
+      case DifferentialSyncRequest(key, userId) => {
         (state, List(SyncEvent("patch", "check")), noOp)
       }
     }
