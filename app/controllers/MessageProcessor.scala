@@ -17,20 +17,21 @@ import uk.co.bhyland.editator.messages.FullSyncRequest
 import uk.co.bhyland.editator.messages.FullSyncEvent
 import uk.co.bhyland.editator.messages.SyncEvent
 import uk.co.bhyland.editator.messages.DifferentialSyncRequest
+import uk.co.bhyland.editator.model.EditatorInstance.RoomId
 
 object MessageProcessor {
 
   def handleInputMessage(state: EditatorState, input: EditatorInput) : (EditatorState, List[EditatorOutput], () => Unit) = {
     
-    def instance(key: String) = state.instances.get(key)
-    
     def updatedState(instance: Option[EditatorInstance]) = {
       instance.map(newInstance => state.withInstance(newInstance)).getOrElse(state)
     }
     
-    def messages(instance: EditatorInstance) =
-      RoomMembershipUpdate(instance.members) ::
-      Nil
+    def messages(instance: Option[EditatorInstance]): List[EditatorOutput] =
+      instance.map(i =>
+        RoomMembershipUpdate(i.members) ::
+        Nil
+      ).getOrElse(Nil) 
     
     def noOp = () => ()
       
@@ -38,28 +39,28 @@ object MessageProcessor {
       case AttachUser(key, userId, callback) => {
         val s = state.withUserOutput(userId)
         callback(s.perUserOutput(userId)._2)
-        (s, messages(s.instances(key)), noOp)
+        (s, messages(s.instances.getInstanceForRoom(key)), noOp)
       }
       case UnattachUser(key, userId) => {
-        val newInstance = instance(key).map(_.leave(userId))
+        val newInstance = state.instances.getInstanceForRoom(key).map(_.leave(userId))
         val s = updatedState(newInstance).dropUserOutput(userId)
-        (s, messages(s.instances(key)), noOp)
+        (s, messages(s.instances.getInstanceForRoom(key)), noOp)
       }
       case ListRooms(callback) => {        
-        (state, Nil, { () => callback(state.instances.keys.toList) })
+        (state, Nil, { () => callback(state.instances.roomIds.toList) })
       } 
       case UpdateNick(key, user) => {
-        val newInstance = instance(key).map(_.changeNick(user))
+        val newInstance = state.instances.getInstanceForRoom(key).map(_.changeNick(user))
         val s = updatedState(newInstance)
-        val ms = newInstance.map(messages(_)).getOrElse(Nil)
+        val ms = messages(newInstance)
         (s, ms, noOp)
         
       }
       case ToggleJoinRoom(key, user, callback) => {
         val roomKey = if(key.isEmpty) UUID.randomUUID().toString() else key
-        val newInstance = instance(roomKey).getOrElse(EditatorInstance(roomKey)).toggleJoin(user)
+        val newInstance = state.instances.getInstanceForRoom(roomKey).getOrElse(EditatorInstance(roomKey)).toggleJoin(user)
         val s = updatedState(Some(newInstance))
-        (s, messages(s.instances(key)), { () => callback(newInstance) })
+        (s, messages(s.instances.getInstanceForRoom(key)), { () => callback(newInstance) })
       }
       case Talk(key, user, message) => {
         (state, List(RoomMessageEvent(key, user.id, DateTime.now, message)), noOp)

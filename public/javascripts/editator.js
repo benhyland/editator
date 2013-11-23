@@ -58,7 +58,8 @@ function EditatorEvents(scope, serviceLocation) {
 
 function Content() {
 	this.text = 'hello world'
-	this.shadow = ''
+	this.shadow = 'hello world'
+	this.lastSequence = 0
 	this.fullSyncRequested = true
 	this.disabled = function() {
 		return this.fullSyncRequested

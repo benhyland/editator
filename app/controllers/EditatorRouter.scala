@@ -13,8 +13,7 @@ import uk.co.bhyland.editator.messages.ToggleJoinRoom
 import uk.co.bhyland.editator.messages.ToggleJoinResponse
 import uk.co.bhyland.editator.messages.RoomMembershipUpdate
 import uk.co.bhyland.editator.model.User
-import uk.co.bhyland.editator.model.EditatorText
-import uk.co.bhyland.editator.model.EditatorRoom
+import uk.co.bhyland.editator.model.User.UserId
 import uk.co.bhyland.editator.model.EditatorInstance
 import uk.co.bhyland.editator.messages.ListRooms
 import uk.co.bhyland.editator.messages.RoomListUpdate
@@ -29,15 +28,16 @@ import scala.concurrent.Await
 import uk.co.bhyland.editator.messages.UnattachUser
 import uk.co.bhyland.editator.messages.Talk
 import uk.co.bhyland.editator.messages.RoomMessageEvent
+import uk.co.bhyland.editator.model.EditatorInstances
 
 case class EditatorState(
     inputEnumerator: Enumerator[EditatorInput],
     inputChannel: Channel[EditatorInput],
-    perUserOutput: Map[String, (Channel[JsValue], Enumerator[JsValue])],
-    instances: Map[String,EditatorInstance]) {
+    perUserOutput: Map[UserId, (Channel[JsValue], Enumerator[JsValue])],
+    instances: EditatorInstances) {
   
   def withInstance(instance: EditatorInstance) =
-    copy(instances = (instances + ((instance.key, instance))))
+    copy(instances = instances.add(instance))
   
   def withUserOutput(userId: String) = {
     val outs = Concurrent.broadcast[JsValue]
@@ -54,7 +54,7 @@ case class EditatorState(
 	}
     
     def userIsInRoom(userId: String, roomId: String) = {
-      instances.get(roomId).map(_.users.exists(_.id == userId)).getOrElse(false)
+      instances.getInstanceForRoom(roomId).map(_.users.exists(_.id == userId)).getOrElse(false)
     }
     perUserOutput.filterKeys(messageIsForUser(_)).values.map(_._1)
   }
@@ -63,7 +63,7 @@ case class EditatorState(
 object EditatorState {
   def apply(): EditatorState = {
     val (inputEnumerator, inChannel) = Concurrent.broadcast[EditatorInput]
-    EditatorState(inputEnumerator, inChannel, Map(), Map())
+    EditatorState(inputEnumerator, inChannel, Map(), new EditatorInstances())
   }
 }
 
@@ -94,7 +94,7 @@ class EditatorRouter {
   def talk(that: Talk) = inChannel.push(that)
   
   def toggleJoin(key: String, user: User) = future[Result] { p =>
-    ToggleJoinRoom(key, user, { room => p.success(Ok(ToggleJoinResponse(room.key, room.isMember(user.id), user).json.forPlay)) })
+    ToggleJoinRoom(key, user, { instance => p.success(Ok(ToggleJoinResponse(instance.key, instance.isMember(user.id), user).json.forPlay)) })
   }
   
   def syncRequest(request: EditatorInput) = inChannel.push(request)
