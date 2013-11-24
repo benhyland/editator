@@ -66,7 +66,10 @@ object MessageProcessor {
         (state, List(RoomMessageEvent(key, user.id, DateTime.now, message)), noOp)
       }
       case FullSyncRequest(key, userId) => {
-        (state, List(FullSyncEvent("hello world")), noOp)
+        (state, List(FullSyncEvent(
+          state.instances.getInstanceForRoom(key)
+          .flatMap(_.shadows.get(userId)).getOrElse(""))
+          ), noOp)
       }
       case DifferentialSyncRequest(key, userId) => {
         (state, List(SyncEvent("patch", "check")), noOp)

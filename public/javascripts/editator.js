@@ -1,5 +1,8 @@
 'use strict';
 
+var contentLoopTimeMillis = 5000
+var onConnectWaitMillis = 500
+
 var editator = angular.module('editator', [])
 
 editator.directive('edEventsService', function() {
@@ -59,7 +62,6 @@ function EditatorEvents(scope, serviceLocation) {
 function Content() {
 	this.text = 'hello world'
 	this.shadow = 'hello world'
-	this.lastSequence = 0
 	this.fullSyncRequested = true
 	this.disabled = function() {
 		return this.fullSyncRequested
@@ -138,31 +140,17 @@ function Editator($scope, $http, $timeout) {
 		return angular.toJson(message);
 	}
 	
-	var contentLoopTimeMillis = 5000
 	$scope.content = new Content()
-	$scope.fullSyncTick = function() {
-	
+	$scope.fullSyncTick = function() {	
 		$scope.content.fullSyncRequested = true
 		// send full sync request
 		$scope.events.send($scope.fullSync(), $scope.room.isJoined)
-		
-		// on timeout or error, schedule full sync
-		// on good response, update content text and shadow, set versions(0,1), schedule differentialSync
-		$timeout($scope.differentialSyncTick, contentLoopTimeMillis)
 	}
-	$scope.differentialSyncTick = function() {
-		
-		$scope.content.fullSyncRequested = false
+	$scope.differentialSyncTick = function() {		
 		// send differential sync request
 		$scope.events.send($scope.differentialSync(), $scope.room.isJoined)
-		
-		// on timeout or error, schedule full sync - pessimistic but simple and needs no backups
-		// on good response, update content text and shadow, set versions, schedule differentialSync
-		$timeout($scope.fullSyncTick, contentLoopTimeMillis)
 	}
 	
-	$timeout($scope.fullSyncTick, contentLoopTimeMillis)
-
 	$scope.room = new Room()
 	$scope.room.setJoined(false)
 	
@@ -191,6 +179,7 @@ function Editator($scope, $http, $timeout) {
 			$scope.roomSet.selectedRoom = data.roomKey
 			$scope.user = data.user
 			$scope.events.notify(wasJoined, data.isJoined, data.roomKey, data.user.id)
+			$timeout($scope.fullSyncTick, onConnectWaitMillis)
 		})
 	}
 
@@ -216,9 +205,12 @@ function Editator($scope, $http, $timeout) {
 		},
 		'sync': function(msg) {
 			$scope.content.applyDiff(msg)
+			$timeout($scope.differentialSyncTick, contentLoopTimeMillis)
 		},
 		'resync': function(msg) {
 			$scope.content.set(msg)
+			$scope.content.fullSyncRequested = false
+			$timeout($scope.differentialSyncTick, contentLoopTimeMillis)
 		}
 	}
 }
