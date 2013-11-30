@@ -63,6 +63,7 @@ function Content() {
 	this.text = 'hello world'
 	this.shadow = 'hello world'
 	this.fullSyncRequested = true
+	this.dmp = new diff_match_patch()
 	this.disabled = function() {
 		return this.fullSyncRequested
 	}
