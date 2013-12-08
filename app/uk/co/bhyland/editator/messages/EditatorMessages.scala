@@ -19,4 +19,4 @@ case class UpdateNick(roomKey: String, user: User) extends HasKey
 case class ToggleJoinRoom(roomKey: String, user: User, callback: EditatorInstance => Unit) extends HasKey
 case class Talk(roomKey: String, user: User, message: String) extends HasKey
 case class FullSyncRequest(roomKey: String, userId: String) extends HasKey
-case class DifferentialSyncRequest(roomKey: String, userId: String) extends HasKey
+case class DifferentialSyncRequest(roomKey: String, userId: String, diff: String) extends HasKey

@@ -21,11 +21,11 @@ case class RoomMessageEvent(roomId: String, from: String, timestamp: DateTime, m
   override def json = encodeWithMessageTypeAs("chatMessage", this)      
 }
 
-case class SyncEvent(patch: String, checksum: String) extends EditatorOutput {
+case class SyncEvent(userId: String, patch: String) extends EditatorOutput {
   override def json = encodeWithMessageTypeAs("sync", this)
 }
 
-case class FullSyncEvent(text: String) extends EditatorOutput {
+case class FullSyncEvent(userId: String, text: String) extends EditatorOutput {
   override def json = encodeWithMessageTypeAs("resync", this)
 }
 

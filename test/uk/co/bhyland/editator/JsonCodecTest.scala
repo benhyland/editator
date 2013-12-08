@@ -101,7 +101,7 @@ class JsonCodecTest extends FunSuite with ShouldMatchers {
   }
   
   test("DifferentialSyncRequest should decode correctly") {
-    val in = """{"sync":"","roomKey":"#room","userId":"bob"}"""
+    val in = """{"roomKey":"#room","userId":"bob","diff":"blah"}"""
     val parsed = decodeAs[DifferentialSyncRequest](in)
   
     parsed should be ('defined)

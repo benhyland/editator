@@ -66,13 +66,17 @@ object MessageProcessor {
         (state, List(RoomMessageEvent(key, user.id, DateTime.now, message)), noOp)
       }
       case FullSyncRequest(key, userId) => {
-        (state, List(FullSyncEvent(
+        (state, List(FullSyncEvent(userId,
           state.instances.getInstanceForRoom(key)
           .flatMap(_.shadows.get(userId)).getOrElse(""))
           ), noOp)
       }
-      case DifferentialSyncRequest(key, userId) => {
-        (state, List(SyncEvent("patch", "check")), noOp)
+      case DifferentialSyncRequest(key, userId, diff) => {
+        val patchedInstance = state.instances.getInstanceForRoom(key).map(_.applyDiff(userId, diff))
+        val reverseDiff = patchedInstance.map(_.getDiff(userId)).getOrElse("")
+        val newInstance = patchedInstance.map(_.updateShadow(userId))
+        val s = updatedState(newInstance)
+        (s, List(SyncEvent(userId, reverseDiff)), noOp)
       }
     }
   }

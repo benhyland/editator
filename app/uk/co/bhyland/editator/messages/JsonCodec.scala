@@ -24,7 +24,7 @@ object JsonCodec {
   
   implicit val roomMembershipUpdateEncode = jencode1L((rmu: RoomMembershipUpdate) => (rmu.users))("members")
   implicit val roomMessageEventEncode = jencode3L((rme: RoomMessageEvent) => (rme.from, rme.timestamp, rme.message))("from", "time", "text")  
-  implicit val syncEventEncode = jencode2L((se: SyncEvent) => (se.patch, se.checksum))("patch", "checksum")
+  implicit val syncEventEncode = jencode1L((se: SyncEvent) => (se.patch))("patch")
   implicit val fullSyncEventEncode = jencode1L((fse: FullSyncEvent) => (fse.text))("text")
 
   implicit val roomListUpdateEncode = jencode1L((rlu: RoomListUpdate) => (rlu.rooms))("rooms")
@@ -32,7 +32,7 @@ object JsonCodec {
   
   implicit val talkDecode = jdecode3L((roomKey: String, user: User, message: String) => Talk(roomKey, user, message))("key", "user", "blah")
   implicit val fullSyncDecode = jdecode3L((tag: String, roomKey: String, userId: String) => FullSyncRequest(roomKey, userId))("resync", "roomKey", "userId")
-  implicit val differentialSyncDecode = jdecode3L((tag: String, roomKey: String, userId: String) => DifferentialSyncRequest(roomKey, userId))("sync", "roomKey", "userId")
+  implicit val differentialSyncDecode = jdecode3L((roomKey: String, userId: String, diff: String) => DifferentialSyncRequest(roomKey, userId, diff))("roomKey", "userId", "diff")
   val syncDecode = fullSyncDecode ||| differentialSyncDecode
   
   def encodeWithMessageTypeAs[A](messageType: String, a: A)(implicit encode: EncodeJson[A]) : Json = {

@@ -28,7 +28,9 @@ import scala.concurrent.Await
 import uk.co.bhyland.editator.messages.UnattachUser
 import uk.co.bhyland.editator.messages.Talk
 import uk.co.bhyland.editator.messages.RoomMessageEvent
+import uk.co.bhyland.editator.messages.SyncEvent
 import uk.co.bhyland.editator.model.EditatorInstances
+import uk.co.bhyland.editator.messages.FullSyncEvent
 
 case class EditatorState(
     inputEnumerator: Enumerator[EditatorInput],
@@ -50,6 +52,8 @@ case class EditatorState(
   def channelsFor(message: EditatorOutput): Iterable[Channel[JsValue]] = {
     def messageIsForUser(userId: String) = message match {
 	  case RoomMessageEvent(roomId, _, _, _) => userIsInRoom(userId, roomId)
+	  case FullSyncEvent(originatingUserId, _) => userId == originatingUserId
+	  case SyncEvent(originatingUserId, _) => userId == originatingUserId
 	  case _ => true
 	}
     

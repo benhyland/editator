@@ -60,15 +60,26 @@ function EditatorEvents(scope, serviceLocation) {
 }
 
 function Content() {
-	this.text = 'hello world'
-	this.shadow = 'hello world'
+	this.text = ''
+	this.shadow = ''
 	this.fullSyncRequested = true
 	this.dmp = new diff_match_patch()
 	this.disabled = function() {
 		return this.fullSyncRequested
 	}
 	this.applyDiff = function(sync) {
-		this.text = sync.patch + ': ' + sync.checksum
+		var patches = this.dmp.patch_fromText(sync.patch)
+		var patchedShadow = this.dmp.patch_apply(patches, this.shadow)
+		var patchedText = this.dmp.patch_apply(patches, this.text)
+		this.shadow = patchedShadow[0]
+		this.text = patchedText[0]
+	}
+	this.getDiff = function() {
+		var diffs = this.dmp.diff_main(this.shadow, this.text)
+		var patch = this.dmp.patch_make(this.shadow, diffs)
+		var diffText = this.dmp.patch_toText(patch)
+		this.shadow = this.text
+		return diffText
 	}
 	this.set = function(sync) {
 		this.text = sync.text
@@ -132,11 +143,11 @@ function Editator($scope, $http, $timeout) {
 		return angular.toJson(message);
 	}
 
-	$scope.differentialSync = function() {
+	$scope.differentialSync = function(diff) {
 		var message = {
-			'sync': '',
 			'roomKey': $scope.room.key,
-			'userId': $scope.user.id
+			'userId': $scope.user.id,
+			'diff': diff
 		}
 		return angular.toJson(message);
 	}
@@ -147,9 +158,10 @@ function Editator($scope, $http, $timeout) {
 		// send full sync request
 		$scope.events.send($scope.fullSync(), $scope.room.isJoined)
 	}
-	$scope.differentialSyncTick = function() {		
+	$scope.differentialSyncTick = function() {
+		var syncMessage = $scope.differentialSync($scope.content.getDiff())
 		// send differential sync request
-		$scope.events.send($scope.differentialSync(), $scope.room.isJoined)
+		$scope.events.send(syncMessage, $scope.room.isJoined)
 	}
 	
 	$scope.room = new Room()
